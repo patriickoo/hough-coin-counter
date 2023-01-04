@@ -94,7 +94,6 @@ static void fill_sin_cos_arrays() {
 
 }
 
-/*
 void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
 
     int x, y, a, b;
@@ -106,14 +105,13 @@ void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
             if (input->data[i] == 255) {
                 x = i % input->cols;
                 y = i / input->cols;
-                //printf("")
+                // printf("ln108: increment_accumulator --> xy[%d, %d]\n", x, y);
                 for (int angle = 0; angle < 360; angle++) {
                     a = x - radii_LUT[face] * distance_constant * cos_array[angle];
                     b = y - radii_LUT[face] * distance_constant * sin_array[angle];
-                    // printf("[%d, %d] -> [%d, %d]\n", x, y, a, b);
                     if ((a >= 0) && (a <= accumulator->cols) && (b >= 0) && (b <= accumulator->rows)) {
                         accumulator->data[a + b * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
-                        // printf("[%d, %d] -> %d\n", a, b, accumulator->data[a + b * accumulator->cols]);
+                        // printf("ln115: increment_accumulator --> abf[%d, %d] is %d\n", a, b, face, accumulator->data[a + b * accumulator->cols + face * accumulator->cols*accumulator->rows]);
                     }
                 }
             }
@@ -122,7 +120,6 @@ void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
     }
 
 }
-*/
 
 void write_circles(FILE *f, struct matrix *accumulator, int threshold) {
 
