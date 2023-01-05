@@ -97,21 +97,24 @@ static void fill_sin_cos_arrays() {
 void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
 
     int x, y, a, b;
-    float distance_constant = 0.1176699;
+    float distance_constant = 0.0959F;
 
-    for (int face = 0; face < accumulator->faces; face++){
+    for (int face = 0; face < accumulator->faces; face++) {
         for (int i = 0; i < input->cols * input->rows; i++) {
 
             if (input->data[i] == 255) {
                 x = i % input->cols;
                 y = i / input->cols;
-                // printf("ln108: increment_accumulator --> xy[%d, %d]\n", x, y);
                 for (int angle = 0; angle < 360; angle++) {
                     a = x - radii_LUT[face] * distance_constant * cos_array[angle];
                     b = y - radii_LUT[face] * distance_constant * sin_array[angle];
-                    if ((a >= 0) && (a <= accumulator->cols) && (b >= 0) && (b <= accumulator->rows)) {
+                    if ((a > 0) && (a < accumulator->cols - 1) && (b > 0) && (b < accumulator->rows - 1)) {
                         accumulator->data[a + b * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
-                        // printf("ln115: increment_accumulator --> abf[%d, %d] is %d\n", a, b, face, accumulator->data[a + b * accumulator->cols + face * accumulator->cols*accumulator->rows]);
+                        accumulator->data[(a + 1) + b * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
+                        accumulator->data[(a - 1) + b * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
+                        accumulator->data[a + b * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
+                        accumulator->data[a + (b + 1) * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
+                        accumulator->data[a + (b - 1) * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
                     }
                 }
             }
@@ -121,16 +124,49 @@ void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
 
 }
 
-void write_circles(FILE *f, struct matrix *accumulator, int threshold) {
+void write_circles(FILE *f, struct matrix *accumulator, int *thresholds) {
 
     fprintf(f, "x\ty\tradius\n");
 
     for (int face = 0; face < accumulator->faces; face++) {
         for (int i = 0; i < accumulator->cols * accumulator->rows; i++) {
-            if (accumulator->data[i] >= threshold) {
+            // printf("[i(%d), face(%d)] -> acc-data(%d) thresh(%d)\n", i, face, accumulator->data[i + face * accumulator->cols * accumulator->rows], thresholds[face]);
+            if (accumulator->data[i + face * accumulator->cols * accumulator->rows] >= thresholds[face] - 15) {
+                // printf("YES!\n");
                 fprintf(f, "%d\t%d\t%d\n", i % accumulator->cols, i / accumulator->cols, radii_LUT[face]);
             }
         }
     }
 
 }
+
+void find_maximum_by_faces(struct matrix *accumulator, int *result_vector) {
+
+    // result_vector = (int*) malloc(sizeof(int) * accumulator->faces);
+
+    for (int face = 0; face < accumulator->faces; face++) {
+
+        int max = 0;
+
+        for (int i = 0; i < accumulator->rows * accumulator->cols; i++) {
+
+            if (accumulator->data[i + face * accumulator->rows * accumulator->cols] > max) {
+                max = accumulator->data[i + face * accumulator->rows * accumulator->cols];
+            }
+        
+        }
+
+        printf("peak for face %d is %d\n", face, max);
+        result_vector[face] = max;
+
+    }
+
+}
+
+/*void count_coins(FILE *coords_centers) {
+
+    while(fscanf(coords_centers, "%d%d%d") == 3) {
+        
+    }
+
+}*/

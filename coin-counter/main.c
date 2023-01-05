@@ -31,18 +31,22 @@ int main() {
     increment_accumulator(&mat, &accumulator);
 
     // PRINT ACCUMULATOR ON FILE
-    /*FILE *print_acc;
+    FILE *print_acc;
     print_acc = fopen("files/accumulator_matrix.csv", "w");
     print_matrix_on_file(print_acc, &accumulator);
 
+    // FIND MAXIMUM PEAK
+    int *peaks;
+    peaks = (int*) malloc(sizeof(int) * accumulator.faces);
+    find_maximum_by_faces(&accumulator, peaks);
 
     // PRINT CIRCLES COORDINATES ON FILE
     FILE *print_circles;
     print_circles = fopen("files/circle_coordinates.csv", "w");
-    write_circles(print_circles, &accumulator, 25);
+    write_circles(print_circles, &accumulator, peaks);
 
     //fclose(print_mat);
-    free_matrix(&mat);*/
+    free_matrix(&mat);
     return 0;
 
 }

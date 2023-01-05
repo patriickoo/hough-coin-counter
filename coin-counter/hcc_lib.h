@@ -5,14 +5,14 @@
 
 #define NUMBER_OF_RADII 8
 
-#define CENT_1 1625
-#define CENT_2 1875
-#define CENT_5 2125
-#define CENT_10 1975
-#define CENT_20 2225
-#define CENT_50 2425
-#define EURO_1 2325
-#define EURO_2 2575
+#define CENT_1 1625 / 2
+#define CENT_2 1875 / 2
+#define CENT_5 2125 / 2
+#define CENT_10 1975 / 2
+#define CENT_20 2225 / 2
+#define CENT_50 2425 / 2
+#define EURO_1 2325 / 2
+#define EURO_2 2575 / 2
 
 struct matrix {
     int rows;
@@ -37,4 +37,6 @@ void increment_accumulator(struct matrix *input, struct matrix *accumulator);
 
 static void fill_sin_cos_arrays();
 
-void write_circles(FILE *f, struct matrix *accumulator, int threshold);
+void write_circles(FILE *f, struct matrix *accumulator, int *threshold);
+
+void find_maximum_by_faces(struct matrix *accumulator, int *result_vector);

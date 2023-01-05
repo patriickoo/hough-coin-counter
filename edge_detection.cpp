@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
     // Canny edge detection
     Mat canny;
-    Canny(img_blur, canny, 200, 300, 3, false);
+    Canny(img_blur, canny, 300, 400, 3, false);
 
     file << "M" << canny;
 
