@@ -21,11 +21,12 @@ int main(int argc, char **argv)
     cvtColor(img, img_gray, COLOR_BGR2GRAY);
     // Blur the image for better edge detection
     Mat img_blur;
-    GaussianBlur(img_gray, img_blur, Size(3, 3), 0);
-
+    GaussianBlur(img_gray, img_blur, Size(7, 7), 0);
+    //medianBlur(img_gray, img_blur ,7);
+    
     // Canny edge detection
     Mat canny;
-    Canny(img_blur, canny, 300, 400, 3, false);
+    Canny(img_blur, canny, 100, 200, 3, false);
 
     file << "M" << canny;
 

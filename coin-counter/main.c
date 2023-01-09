@@ -40,10 +40,13 @@ int main() {
     peaks = (int*) malloc(sizeof(int) * accumulator.faces);
     find_maximum_by_faces(&accumulator, peaks);
 
-    // PRINT CIRCLES COORDINATES ON FILE
-    FILE *print_circles;
-    print_circles = fopen("files/circle_coordinates.csv", "w");
-    write_circles(print_circles, &accumulator, peaks);
+    // SAVE CIRCLES COORDINATES AND PRINT ON FILE
+    struct centers_coords *coords;
+    coords = (struct centers_coords*) malloc(sizeof(int) * 3 * 1000);
+    int size = write_circles(coords, &accumulator, peaks);
+
+    // COUNT COINS
+    printf("the subtotal is %f\n", count_coins(coords, size));
 
     //fclose(print_mat);
     free_matrix(&mat);

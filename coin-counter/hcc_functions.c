@@ -3,11 +3,11 @@
 int radii_LUT[] = {
     CENT_1,
     CENT_2,
-    CENT_5,
     CENT_10,
+    CENT_5,
     CENT_20,
-    CENT_50,
     EURO_1,
+    CENT_50,
     EURO_2
 };
 
@@ -89,7 +89,6 @@ static void fill_sin_cos_arrays() {
     for (int angle = 0; angle < 360; angle++) {
         sin_array[angle] = (float) sin(angle * M_PI / 180);
         cos_array[angle] = (float) cos(angle * M_PI / 180);
-        // printf("%d -> %f\n", angle, sin_array[angle]);
     }
 
 }
@@ -97,7 +96,6 @@ static void fill_sin_cos_arrays() {
 void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
 
     int x, y, a, b;
-    float distance_constant = 0.0959F;
 
     for (int face = 0; face < accumulator->faces; face++) {
         for (int i = 0; i < input->cols * input->rows; i++) {
@@ -106,15 +104,16 @@ void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
                 x = i % input->cols;
                 y = i / input->cols;
                 for (int angle = 0; angle < 360; angle++) {
-                    a = x - radii_LUT[face] * distance_constant * cos_array[angle];
-                    b = y - radii_LUT[face] * distance_constant * sin_array[angle];
-                    if ((a > 0) && (a < accumulator->cols - 1) && (b > 0) && (b < accumulator->rows - 1)) {
-                        accumulator->data[a + b * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
-                        accumulator->data[(a + 1) + b * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
-                        accumulator->data[(a - 1) + b * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
-                        accumulator->data[a + b * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
-                        accumulator->data[a + (b + 1) * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
-                        accumulator->data[a + (b - 1) * accumulator->cols + face * accumulator->cols * accumulator->rows]++;
+                    a = x - radii_LUT[face] * DISTANCE_CONSTANT * cos_array[angle];
+                    b = y - radii_LUT[face] * DISTANCE_CONSTANT * sin_array[angle];
+                    if ((a >= 5) && (a < accumulator->cols - 6) && (b >= 5) && (b < accumulator->rows - 6)) {
+
+                        for (int i = -2; i <= 2; i++) {
+                            for (int j = -2; j <= 2; j++) {
+                                accumulator->data[(a + i) + (b + j) * accumulator->cols + face * accumulator->cols * accumulator->rows]+= 7 - abs(i) - abs(j);
+                            }
+                        }
+
                     }
                 }
             }
@@ -124,18 +123,40 @@ void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
 
 }
 
-void write_circles(FILE *f, struct matrix *accumulator, int *thresholds) {
+int write_circles(struct centers_coords *coords, struct matrix *accumulator, int *thresholds) {
 
-    fprintf(f, "x\ty\tradius\n");
-
+    //fprintf(f, "x\ty\tradius\n");
+    int count = 0;
+    
     for (int face = 0; face < accumulator->faces; face++) {
         for (int i = 0; i < accumulator->cols * accumulator->rows; i++) {
             // printf("[i(%d), face(%d)] -> acc-data(%d) thresh(%d)\n", i, face, accumulator->data[i + face * accumulator->cols * accumulator->rows], thresholds[face]);
-            if (accumulator->data[i + face * accumulator->cols * accumulator->rows] >= thresholds[face] - 15) {
-                // printf("YES!\n");
-                fprintf(f, "%d\t%d\t%d\n", i % accumulator->cols, i / accumulator->cols, radii_LUT[face]);
+            if (accumulator->data[i + face * accumulator->cols * accumulator->rows] >= (int)((float)(thresholds[face] / 100) * 85)) {
+
+                coords[count].x = i % accumulator->cols;
+                coords[count].y = i / accumulator->cols;
+                coords[count].radius = radii_LUT[face];
+                printf("%d\t%d\t%d\n", coords[count].x, coords[count].y, coords[count].radius);
+                count++;
+
             }
         }
+    }
+
+    realloc(coords, count * sizeof(int) * 3);
+    FILE *out_circles;
+    out_circles = fopen("files/circle_coordinates.csv", "w");
+    write_circles_on_file(out_circles, coords, count);
+    return count;
+
+}
+
+void write_circles_on_file(FILE *f, struct centers_coords *coords, int size) {
+
+    fprintf(f, "x\ty\tradius\n");
+
+    for (int i = 0; i < size; i++) {
+        fprintf(f, "%d\t%d\t%d\n", coords[i].x, coords[i].y, coords[i].radius);
     }
 
 }
@@ -163,10 +184,75 @@ void find_maximum_by_faces(struct matrix *accumulator, int *result_vector) {
 
 }
 
-/*void count_coins(FILE *coords_centers) {
+static int get_distance(struct centers_coords c1, struct centers_coords c2) {
+    
+    // printf("\ndist %f\n", sqrt(pow(c1.x - c2.x, 2) + pow(c1.y - c2.y, 2)));
+    return (int) sqrt(pow(c1.x - c2.x, 2) + pow(c1.y - c2.y, 2));
+    
 
-    while(fscanf(coords_centers, "%d%d%d") == 3) {
-        
+}
+
+static float get_value_of_circle(struct centers_coords *coords) {
+
+    switch (coords->radius) {
+        case 812:
+            printf("found 1C [%d, %d]\n", coords->x, coords->y);
+            return 0.01F;
+
+        case 937:
+            printf("found 2C [%d, %d]\n", coords->x, coords->y);
+            return 0.02F;
+
+        case 987:
+            printf("found 10C [%d, %d]\n", coords->x, coords->y);
+            return 0.1F;
+
+        case 1062:
+            printf("found 5C [%d, %d]\n", coords->x, coords->y);
+            return 0.05F;
+
+        case 1112:
+            printf("found 20C [%d, %d]\n", coords->x, coords->y);
+            return 0.2F;
+
+        case 1162:
+            printf("found 1E [%d, %d]\n", coords->x, coords->y);
+            return 1.F;
+
+        case 1212:
+            printf("found 50C [%d, %d]\n", coords->x, coords->y);
+            return 0.5F;
+
+        case 1287:
+            printf("found 2E [%d, %d]\n", coords->x, coords->y);
+            return 2.F;
+
+        default:
+            return -9999999999.F;
     }
 
-}*/
+}
+
+float count_coins(struct centers_coords *coords, int size) {
+
+    float total = 0.0F;
+
+    total += get_value_of_circle(&coords[size - 1]);
+        
+    for (int i = size - 2; i >= 0; i--) {
+
+        total += get_value_of_circle(&coords[i]);
+
+        for (int j = i + 1; j < size; j++) {
+            if (get_distance(coords[i], coords[j]) <= coords[j].radius / 2 * DISTANCE_CONSTANT) {
+                printf("\t\t\t\t\t\t\t\t\t\tdelete");
+                total -= get_value_of_circle(&coords[i]);
+                break;
+            }
+        }
+
+    }
+
+    return total;
+
+}

@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     FILE *f;
     f = fopen("files/circle_coordinates.csv", "r");
     int x, y, radius;
-    float distance_constant = 0.0959F;
+    float distance_constant = 0.1506796F;
 
     fscanf(f, "%*s %*s %*s");
 
