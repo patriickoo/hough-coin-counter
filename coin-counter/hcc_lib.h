@@ -4,7 +4,8 @@
 #include <math.h>
 
 #define NUMBER_OF_RADII 8
-#define DISTANCE_CONSTANT 0.1506796F
+#define DISTANCE_CONSTANT 6.9567F
+#define RADIUS_TOLERANCE 20
 
 #define CENT_1 1625 / 2
 #define CENT_2 1875 / 2
@@ -44,9 +45,9 @@ void increment_accumulator(struct matrix *input, struct matrix *accumulator);
 
 static void fill_sin_cos_arrays();
 
-int write_circles(struct centers_coords *coords, struct matrix *accumulator, int *thresholds);
+int write_circles(struct centers_coords *coords, struct matrix *accumulator, int threshold);
 
-void find_maximum_by_faces(struct matrix *accumulator, int *result_vector);
+int find_maximum(struct matrix *accumulator);
 
 static int get_distance(struct centers_coords c1, struct centers_coords c2);
 

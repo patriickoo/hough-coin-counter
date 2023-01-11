@@ -1,16 +1,5 @@
 #include "hcc_lib.h"
 
-int radii_LUT[] = {
-    CENT_1,
-    CENT_2,
-    CENT_10,
-    CENT_5,
-    CENT_20,
-    EURO_1,
-    CENT_50,
-    EURO_2
-};
-
 float *sin_array;
 float *cos_array;
 
@@ -96,21 +85,31 @@ static void fill_sin_cos_arrays() {
 void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
 
     int x, y, a, b;
+    int radius = accumulator->faces / 4;
+    int voting_range = 5; // MUST BE ODD NUMBER !
+    // printf("radius: %d\n", radius);
 
     for (int face = 0; face < accumulator->faces; face++) {
+        printf("face %d...\n", face);
         for (int i = 0; i < input->cols * input->rows; i++) {
 
-            if (input->data[i] == 255) {
-                x = i % input->cols;
-                y = i / input->cols;
-                for (int angle = 0; angle < 360; angle++) {
-                    a = x - radii_LUT[face] * DISTANCE_CONSTANT * cos_array[angle];
-                    b = y - radii_LUT[face] * DISTANCE_CONSTANT * sin_array[angle];
-                    if ((a >= 5) && (a < accumulator->cols - 6) && (b >= 5) && (b < accumulator->rows - 6)) {
+            x = i % input->cols;
+            y = i / input->cols;
 
-                        for (int i = -2; i <= 2; i++) {
-                            for (int j = -2; j <= 2; j++) {
-                                accumulator->data[(a + i) + (b + j) * accumulator->cols + face * accumulator->cols * accumulator->rows]+= 7 - abs(i) - abs(j);
+            if (input->data[i] == 255) {
+                
+                for (int angle = 0; angle < 360; angle++) {
+                    a = x - radius * cos_array[angle];
+                    b = y - radius * sin_array[angle];
+                    if ((a >= voting_range / 2) && (a < accumulator->cols - (voting_range / 2)) && (b >= voting_range / 2) && (b < accumulator->rows - (voting_range / 2))) {
+                        // printf("ab(%d, %d)\n", a, b);
+
+                        for (int i = - (voting_range / 2); i <= voting_range / 2; i++) {
+                            for (int j = - (voting_range / 2); j <= voting_range / 2; j++) {
+                                // printf("i: %d, j: %d\n", i, j);
+                                // printf("[%d, %d, %d] rad(%d), vote(%d), index(%d)\n", x, y, face, radius, voting_range - abs(i) - abs(j), (a + i) + (b + j) * accumulator->cols + face * accumulator->cols * accumulator->rows);
+                                accumulator->data[(a + i) + (b + j) * accumulator->cols + face * accumulator->cols * accumulator->rows] += voting_range - abs(i) - abs(j);
+                                // printf("val(%d)\n", accumulator->data[(a + i) + (b + j) * accumulator->cols + face * accumulator->cols * accumulator->rows]);
                             }
                         }
 
@@ -119,28 +118,30 @@ void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
             }
 
         }
+        radius++;
     }
 
 }
 
-int write_circles(struct centers_coords *coords, struct matrix *accumulator, int *thresholds) {
+int write_circles(struct centers_coords *coords, struct matrix *accumulator, int threshold) {
 
-    //fprintf(f, "x\ty\tradius\n");
     int count = 0;
+    int radius = accumulator->faces / 10;
     
     for (int face = 0; face < accumulator->faces; face++) {
         for (int i = 0; i < accumulator->cols * accumulator->rows; i++) {
             // printf("[i(%d), face(%d)] -> acc-data(%d) thresh(%d)\n", i, face, accumulator->data[i + face * accumulator->cols * accumulator->rows], thresholds[face]);
-            if (accumulator->data[i + face * accumulator->cols * accumulator->rows] >= (int)((float)(thresholds[face] / 100) * 85)) {
+            if (accumulator->data[i + face * accumulator->cols * accumulator->rows] >= threshold) {
 
                 coords[count].x = i % accumulator->cols;
                 coords[count].y = i / accumulator->cols;
-                coords[count].radius = radii_LUT[face];
+                coords[count].radius = radius;
                 printf("%d\t%d\t%d\n", coords[count].x, coords[count].y, coords[count].radius);
                 count++;
 
             }
         }
+        radius++;
     }
 
     realloc(coords, count * sizeof(int) * 3);
@@ -151,104 +152,99 @@ int write_circles(struct centers_coords *coords, struct matrix *accumulator, int
 
 }
 
-void write_circles_on_file(FILE *f, struct centers_coords *coords, int size) {
+void write_circles_on_file(FILE *f, struct centers_coords *coords, int number_of_circles) {
 
     fprintf(f, "x\ty\tradius\n");
 
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < number_of_circles; i++) {
         fprintf(f, "%d\t%d\t%d\n", coords[i].x, coords[i].y, coords[i].radius);
     }
 
 }
 
-void find_maximum_by_faces(struct matrix *accumulator, int *result_vector) {
+int find_maximum(struct matrix *accumulator) {
 
-    // result_vector = (int*) malloc(sizeof(int) * accumulator->faces);
+    int max = 0;
 
-    for (int face = 0; face < accumulator->faces; face++) {
-
-        int max = 0;
-
-        for (int i = 0; i < accumulator->rows * accumulator->cols; i++) {
-
-            if (accumulator->data[i + face * accumulator->rows * accumulator->cols] > max) {
-                max = accumulator->data[i + face * accumulator->rows * accumulator->cols];
-            }
-        
+    for (int i = 0; i < accumulator->rows * accumulator->cols * accumulator->faces; i++) {
+     if (accumulator->data[i] > max) {
+            max = accumulator->data[i];
         }
-
-        printf("peak for face %d is %d\n", face, max);
-        result_vector[face] = max;
-
     }
+
+    return max;
 
 }
 
 static int get_distance(struct centers_coords c1, struct centers_coords c2) {
-    
-    // printf("\ndist %f\n", sqrt(pow(c1.x - c2.x, 2) + pow(c1.y - c2.y, 2)));
+
     return (int) sqrt(pow(c1.x - c2.x, 2) + pow(c1.y - c2.y, 2));
-    
 
 }
 
 static float get_value_of_circle(struct centers_coords *coords) {
 
-    switch (coords->radius) {
-        case 812:
-            printf("found 1C [%d, %d]\n", coords->x, coords->y);
-            return 0.01F;
+    float size = (float)coords->radius * DISTANCE_CONSTANT;
+    // printf("[%d, %d] size (%d * %f) is %f\n", coords->x, coords->y, coords->radius, DISTANCE_CONSTANT, size);
 
-        case 937:
-            printf("found 2C [%d, %d]\n", coords->x, coords->y);
-            return 0.02F;
-
-        case 987:
-            printf("found 10C [%d, %d]\n", coords->x, coords->y);
-            return 0.1F;
-
-        case 1062:
-            printf("found 5C [%d, %d]\n", coords->x, coords->y);
-            return 0.05F;
-
-        case 1112:
-            printf("found 20C [%d, %d]\n", coords->x, coords->y);
-            return 0.2F;
-
-        case 1162:
-            printf("found 1E [%d, %d]\n", coords->x, coords->y);
-            return 1.F;
-
-        case 1212:
-            printf("found 50C [%d, %d]\n", coords->x, coords->y);
-            return 0.5F;
-
-        case 1287:
-            printf("found 2E [%d, %d]\n", coords->x, coords->y);
-            return 2.F;
-
-        default:
-            return -9999999999.F;
+    if (size >= 812 - RADIUS_TOLERANCE && size <= 812 + RADIUS_TOLERANCE) {
+        return 0.01F;
     }
+
+    if (size >= 937 - RADIUS_TOLERANCE && size <= 937 + RADIUS_TOLERANCE) {
+        return 0.02F;
+    }
+
+    if (size >= 987 - RADIUS_TOLERANCE && size <= 987 + RADIUS_TOLERANCE) {
+        return 0.1F;
+    }
+
+    if (size >= 1062 - RADIUS_TOLERANCE && size <= 1062 + RADIUS_TOLERANCE) {
+        return 0.05F;
+    }
+
+    if (size >= 1112 - RADIUS_TOLERANCE && size <= 1112 + RADIUS_TOLERANCE) {
+        return 0.2F;
+    }
+
+    if (size >= 1162 - RADIUS_TOLERANCE && size <= 1162 + RADIUS_TOLERANCE) {
+        return 1.F;
+    }
+
+    if (size >= 1212 - RADIUS_TOLERANCE && size <= 1212 + RADIUS_TOLERANCE) {
+        return 0.5F;
+    }
+
+    if (size >= 1287 - RADIUS_TOLERANCE && size <= 1287 + RADIUS_TOLERANCE) {
+        return 2.F;
+    }
+
+    return 0;
 
 }
 
-float count_coins(struct centers_coords *coords, int size) {
+float count_coins(struct centers_coords *coords, int number_of_circles) {
 
     float total = 0.0F;
-
-    total += get_value_of_circle(&coords[size - 1]);
+    //DEBUG
+    int flag;
         
-    for (int i = size - 2; i >= 0; i--) {
+    for (int i = number_of_circles - 1; i >= 0; i--) {
+
+        flag = 0;
 
         total += get_value_of_circle(&coords[i]);
 
-        for (int j = i + 1; j < size; j++) {
-            if (get_distance(coords[i], coords[j]) <= coords[j].radius / 2 * DISTANCE_CONSTANT) {
-                printf("\t\t\t\t\t\t\t\t\t\tdelete");
+        for (int j = i + 1; j < number_of_circles; j++) {
+            if (get_distance(coords[i], coords[j]) <= coords[i].radius / 2) {
                 total -= get_value_of_circle(&coords[i]);
+                flag = 1;
                 break;
             }
+        }
+
+        if (!flag) {
+            printf("found %f (%d) in [%d, %d]\n", get_value_of_circle(&coords[i]), coords[i].radius, coords[i].x, coords[i].y);
         }
 
     }

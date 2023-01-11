@@ -17,7 +17,6 @@ int main(int argc, char **argv)
     FILE *f;
     f = fopen("files/circle_coordinates.csv", "r");
     int x, y, radius;
-    float distance_constant = 0.1506796F;
 
     fscanf(f, "%*s %*s %*s");
 
@@ -26,7 +25,7 @@ int main(int argc, char **argv)
         printf("drawing x(%d) y(%d) rad(%d)\n", x, y, radius);
         Point p = Point(x, y);
         circle(img, p, 1, Scalar(0, 255, 0), 12, LINE_AA);
-        circle(img, p, radius * distance_constant, Scalar(255, 0, 0), 2, LINE_AA);
+        circle(img, p, radius, Scalar(255, 0, 0), 2, LINE_AA);
 
     }
 
