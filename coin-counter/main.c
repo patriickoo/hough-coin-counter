@@ -19,7 +19,7 @@ int main() {
     struct matrix accumulator;
     accumulator.rows = mat.rows;
     accumulator.cols = mat.cols;
-    accumulator.faces = sqrt(pow(mat.rows, 2) + pow(mat.cols, 2)) / 8;
+    accumulator.faces = sqrt(pow(mat.rows, 2) + pow(mat.cols, 2)) / 6;
     long long unsigned int data_length = accumulator.rows * accumulator.cols * accumulator.faces;
     printf("data length: %llu\n", data_length);
     accumulator.data = malloc(sizeof *accumulator.data * data_length);
@@ -37,7 +37,7 @@ int main() {
     // SAVE CIRCLES COORDINATES AND PRINT ON FILE
     struct centers_coords *coords;
     coords = (struct centers_coords*) malloc(sizeof(int) * 3 * 1000);
-    int size = write_circles(coords, &accumulator, (int)((float)peak * 85 / 100));
+    int size = write_circles(coords, &accumulator, (int)((float)peak * 80 / 100));
     printf("Circles written.\n");
 
     // COUNT COINS

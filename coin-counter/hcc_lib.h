@@ -3,9 +3,9 @@
 #include <string.h>
 #include <math.h>
 
-#define NUMBER_OF_RADII 8
-#define DISTANCE_CONSTANT 6.9567F
-#define RADIUS_TOLERANCE 20
+#define DISTANCE_CONSTANT 15.22F
+#define RADIUS_TOLERANCE 10
+#define MIN_RADIUS_CONSTANT 4
 
 #define CENT_1 1625 / 2
 #define CENT_2 1875 / 2

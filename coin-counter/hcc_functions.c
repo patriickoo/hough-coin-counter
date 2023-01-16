@@ -85,7 +85,7 @@ static void fill_sin_cos_arrays() {
 void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
 
     int x, y, a, b;
-    int radius = accumulator->faces / 4;
+    int radius = accumulator->faces / MIN_RADIUS_CONSTANT;
     int voting_range = 5; // MUST BE ODD NUMBER !
     // printf("radius: %d\n", radius);
 
@@ -126,7 +126,7 @@ void increment_accumulator(struct matrix *input, struct matrix *accumulator) {
 int write_circles(struct centers_coords *coords, struct matrix *accumulator, int threshold) {
 
     int count = 0;
-    int radius = accumulator->faces / 10;
+    int radius = accumulator->faces / MIN_RADIUS_CONSTANT;
     
     for (int face = 0; face < accumulator->faces; face++) {
         for (int i = 0; i < accumulator->cols * accumulator->rows; i++) {
