@@ -1,5 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include "coin-counter/hcc_lib.h"
 
 using namespace cv;
 using namespace std;
@@ -15,6 +16,8 @@ int main(int argc, char **argv)
 
     Mat img = imread(input_filename);
     FileStorage file("files/matrix.txt", cv::FileStorage::WRITE);
+
+    resize(img, img, Size(img.cols * RESIZE_CONSTANT, img.rows * RESIZE_CONSTANT), 0, 0, INTER_LINEAR);
 
     // Convert to graycsale
     Mat img_gray;

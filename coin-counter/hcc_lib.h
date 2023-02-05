@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
-#define DISTANCE_CONSTANT 15.22F
+#define RESIZE_CONSTANT 0.8F
+#define DISTANCE_CONSTANT 6.4375F / RESIZE_CONSTANT
 #define RADIUS_TOLERANCE 10
 #define MIN_RADIUS_CONSTANT 4
 

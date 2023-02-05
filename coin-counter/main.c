@@ -2,6 +2,10 @@
 
 int main() {
 
+    // ProfilerStart("hcc-profiling.prof");
+
+    clock_t start = clock();
+
     init();
 
     // READ IMAGE
@@ -37,14 +41,22 @@ int main() {
     // SAVE CIRCLES COORDINATES AND PRINT ON FILE
     struct centers_coords *coords;
     coords = (struct centers_coords*) malloc(sizeof(int) * 3 * 1000);
-    int size = write_circles(coords, &accumulator, (int)((float)peak * 80 / 100));
+    int size = write_circles(coords, &accumulator, (int)((float)peak * 85 / 100));
     printf("Circles written.\n");
 
     // COUNT COINS
     printf("Subtotal is %f\n", count_coins(coords, size));
 
+    clock_t end = clock();
+    double time_spent = ((double)(end - start))/CLOCKS_PER_SEC;
+
+    printf("TIME SPENT %lf\n", time_spent);
+
+    // ProfilerStop();
+
     //fclose(print_mat);
     free_matrix(&mat);
+
     return 0;
 
 }
