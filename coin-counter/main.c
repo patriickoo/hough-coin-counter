@@ -2,24 +2,21 @@
 
 int main() {
 
-    // ProfilerStart("hcc-profiling.prof");
+    clock_t start = clock();  // start counting time
 
-    clock_t start = clock();
+    init();  // initialise precomputed sine and cosine arrays
 
-    init();
-
-    // READ IMAGE
     FILE *f;
     f = fopen("files/matrix.txt", "r");
     if (f != NULL) {
         printf("File found: ");
     }
     struct matrix mat;
-    read_image(f, &mat);
+    read_image(f, &mat);  // read image and convert it into a struct matrix
     fclose(f);
     printf("%dx%d\nIncrementing accumulator...\n", mat.cols, mat.rows);
 
-    // START HOUGH TANSFORM
+    /* HOUGH TANSFORM */
     struct matrix accumulator;
     accumulator.rows = mat.rows;
     accumulator.cols = mat.cols;
@@ -29,33 +26,31 @@ int main() {
     accumulator.data = malloc(sizeof *accumulator.data * data_length);
     printf("accumulator: x(%d) y(%d) f(%d) sizeofdata(%lu)\n", accumulator.cols, accumulator.rows, accumulator.faces, sizeof(accumulator.data));
     
-    increment_accumulator(&mat, &accumulator);
-
+    increment_accumulator(&mat, &accumulator);  // most of the computing happens here
     printf("Accumulator incremented.\n");
-
-    // FIND MAXIMUM
+    
     int peak = find_maximum(&accumulator);
-
     printf("Peak is %d\nWriting circles...\n", peak);
 
-    // SAVE CIRCLES COORDINATES AND PRINT ON FILE
+    /* FIND CIRCLES */
     struct centers_coords *coords;
     coords = (struct centers_coords*) malloc(sizeof(int) * 3 * 1000);
-    int size = write_circles(coords, &accumulator, (int)((float)peak * 85 / 100));
+
+    int threshold = (int)((float)peak * 85 / 100); // take the threshold as 85% of the maximum value
+    int size = write_circles(coords, &accumulator, threshold);
+
     printf("Circles written.\n");
 
-    // COUNT COINS
+    /* COUNT COINS */
     printf("Subtotal is %f\n", count_coins(coords, size));
 
     clock_t end = clock();
-    double time_spent = ((double)(end - start))/CLOCKS_PER_SEC;
+    double time_spent = ((double)(end - start)) / CLOCKS_PER_SEC;
 
-    printf("TIME SPENT %lf\n", time_spent);
+    printf("TOTAL TIME SPENT %lf\n", time_spent);
 
-    // ProfilerStop();
-
-    //fclose(print_mat);
     free_matrix(&mat);
+    free_matrix(&accumulator);
 
     return 0;
 

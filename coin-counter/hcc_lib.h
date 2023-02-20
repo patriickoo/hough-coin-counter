@@ -9,6 +9,7 @@
 #define RADIUS_TOLERANCE 10
 #define MIN_RADIUS_CONSTANT 4
 
+// each of these is the radius of the coin in millimetres
 #define CENT_1 1625 / 2
 #define CENT_2 1875 / 2
 #define CENT_5 2125 / 2
@@ -35,7 +36,7 @@ void init();
 
 void read_image(FILE *f, struct matrix *output);
 
-void skip_line(FILE *f);
+static inline void skip_line(FILE *f);
 
 void print_matrix(struct matrix *mat);
 
@@ -51,7 +52,7 @@ int write_circles(struct centers_coords *coords, struct matrix *accumulator, int
 
 int find_maximum(struct matrix *accumulator);
 
-static int get_distance(struct centers_coords c1, struct centers_coords c2);
+static inline int get_distance(struct centers_coords c1, struct centers_coords c2);
 
 float count_coins(struct centers_coords *coords, int size);
 
