@@ -245,9 +245,20 @@ float count_coins(struct centers_coords *coords, int number_of_circles) {
 
         flag = 0;  // debug
 
-        total += get_value_of_circle(&coords[i]);  // by default, sum the value of the coin
+        float value;
 
-        for (int j = i + 1; j < number_of_circles; j++) {  // cycle through previous circles
+        value = get_value_of_circle(&coords[i]);
+
+        if (value == 0) {  // if value is 0, remove circle so we don't exclude coins improperly
+            coords[i].radius = 0;
+            coords[i].x = 0;
+            coords[i].y = 0;
+            flag = 1;
+        }
+
+        total += value;  //then sum it to the total
+
+        for (int j = i + 1; j < number_of_circles; j++) {  // cycle through previous bigger coins
             if (get_distance(coords[i], coords[j]) <= coords[i].radius / 2) {  // if one is found close to the current one
                 total -= get_value_of_circle(&coords[i]);  // remove it from the total (it was wrongly added)
                 flag = 1;  // debug
